@@ -1,6 +1,13 @@
 {
   "name": "ticktuk-user-management",
   "version": "1.0.0",
+  "description": "User management service for TickTuk application, handling authentication, authorization, and user profile management",
+  "author": "David Jimenez <danimax.com@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/ticktuk-user-management"
+  },
   "engines": {
     "node": ">=20.0.0"
   },
