@@ -1,5 +1,5 @@
-import { User } from '../models/user.model';
-import { UserRepository } from '../repositories/user.repository';
+import { User } from "../models/user.model";
+import { UserRepository } from "../repositories/user.repository";
 
 export class UserService {
   private readonly userRepository: UserRepository;
@@ -9,11 +9,11 @@ export class UserService {
   }
 
   public async createUser(
-    userData: Omit<User, 'id' | 'createdAt'>
+    userData: Omit<User, "id" | "createdAt">,
   ): Promise<User> {
     const existingUser = await this.findByEmail(userData.email);
     if (existingUser) {
-      throw new Error('Email already exists');
+      throw new Error("Email already exists");
     }
     return await this.userRepository.create({
       ...userData,

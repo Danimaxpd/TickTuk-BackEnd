@@ -1,10 +1,10 @@
-import { redis } from '../config/redis';
-import { v4 as uuidv4 } from 'uuid';
+import { redis } from "../config/redis";
+import { v4 as uuidv4 } from "uuid";
 
 export abstract class BaseRepository<T> {
   constructor(private readonly prefix: string) {}
 
-  protected async create(data: Omit<T, 'id'>): Promise<T> {
+  protected async create(data: Omit<T, "id">): Promise<T> {
     const id = uuidv4();
     const item = { id, ...data, createdAt: new Date().toISOString() };
     await redis.set(`${this.prefix}:${id}`, JSON.stringify(item));
@@ -45,7 +45,7 @@ export abstract class BaseRepository<T> {
 
   private matchesQuery(item: T, query: Partial<T>): boolean {
     return Object.entries(query).every(
-      ([key, value]) => item[key as keyof T] === value
+      ([key, value]) => item[key as keyof T] === value,
     );
   }
 }

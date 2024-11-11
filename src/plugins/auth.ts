@@ -1,11 +1,11 @@
-import fp from 'fastify-plugin';
-import { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
+import fp from "fastify-plugin";
+import { FastifyPluginAsync, FastifyRequest, FastifyReply } from "fastify";
 
-declare module 'fastify' {
+declare module "fastify" {
   interface FastifyInstance {
     authenticate: (
       request: FastifyRequest,
-      reply: FastifyReply
+      reply: FastifyReply,
     ) => Promise<void>;
     generateFrontendToken: () => string;
   }
@@ -13,19 +13,19 @@ declare module 'fastify' {
 
 const authPlugin: FastifyPluginAsync = async (fastify) => {
   if (!process.env.JWT_SECRET) {
-    throw new Error('JWT_SECRET is not defined');
+    throw new Error("JWT_SECRET is not defined");
   }
 
   const authenticate = async (request: FastifyRequest, reply: FastifyReply) => {
     try {
       const authHeader = request.headers.authorization;
       if (!authHeader) {
-        throw new Error('Missing authorization header');
+        throw new Error("Missing authorization header");
       }
 
-      const [bearer, token] = authHeader.split(' ');
-      if (bearer !== 'Bearer' || !token) {
-        throw new Error('Invalid authorization format');
+      const [bearer, token] = authHeader.split(" ");
+      if (bearer !== "Bearer" || !token) {
+        throw new Error("Invalid authorization format");
       }
 
       fastify.jwt.verify(token);
@@ -33,24 +33,24 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
       const decoded = fastify.jwt.decode(token);
       if (
         decoded &&
-        typeof decoded === 'object' &&
-        'type' in decoded &&
-        decoded.type !== 'frontend'
+        typeof decoded === "object" &&
+        "type" in decoded &&
+        decoded.type !== "frontend"
       ) {
-        throw new Error('Invalid token type');
+        throw new Error("Invalid token type");
       }
     } catch (err) {
       reply.code(401).send({
-        error: 'Unauthorized',
-        message: err instanceof Error ? err.message : 'Authentication failed',
+        error: "Unauthorized",
+        message: err instanceof Error ? err.message : "Authentication failed",
       });
     }
   };
 
-  fastify.decorate('authenticate', authenticate);
-  fastify.decorate('generateFrontendToken', () => {
+  fastify.decorate("authenticate", authenticate);
+  fastify.decorate("generateFrontendToken", () => {
     return fastify.jwt.sign({
-      type: 'frontend',
+      type: "frontend",
       timestamp: Date.now(),
       expiresIn: Math.floor(Date.now() / 1000) + 3600, // 1 hour
     });
@@ -58,5 +58,5 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
 };
 
 export default fp(authPlugin, {
-  name: 'auth-plugin',
+  name: "auth-plugin",
 });

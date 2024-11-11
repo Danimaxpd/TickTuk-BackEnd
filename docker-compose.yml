@@ -5,6 +5,7 @@ services:
       - REDIS_URL=redis://default:RedisPassw0rd@redis:6379
       - JWT_SECRET=${JWT_SECRET}
       - API_KEY=${API_KEY}
+      - INSTANCE_ID=api1
     depends_on:
       redis:
         condition: service_healthy
@@ -22,6 +23,7 @@ services:
       - REDIS_URL=redis://default:RedisPassw0rd@redis:6379
       - JWT_SECRET=${JWT_SECRET}
       - API_KEY=${API_KEY}
+      - INSTANCE_ID=api2
     depends_on:
       redis:
         condition: service_healthy
@@ -55,15 +57,14 @@ services:
     image: redis:alpine
     ports:
       - '6379:6379'
-    volumes:
-      - redis_data:/data
     command: >
       redis-server 
-      --appendonly yes 
       --maxmemory 512mb 
       --maxmemory-policy allkeys-lru
       --requirepass RedisPassw0rd
       --protected-mode yes
+      --save ""
+      --appendonly no
     healthcheck:
       test: ['CMD', 'redis-cli', '-a', 'RedisPassw0rd', 'ping']
       interval: 5s
@@ -76,10 +77,6 @@ services:
         limits:
           memory: 1G
     restart: unless-stopped
-
-volumes:
-  redis_data:
-    driver: local
 
 networks:
   app-network:
