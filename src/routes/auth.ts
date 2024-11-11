@@ -5,18 +5,34 @@ export default async function authRoutes(fastify: FastifyInstance) {
     '/auth/token',
     {
       schema: {
+        description: 'Generate a new authentication token using API key',
+        tags: ['Authentication'],
         body: {
           type: 'object',
           required: ['apiKey'],
           properties: {
-            apiKey: { type: 'string' },
+            apiKey: {
+              type: 'string',
+              description: 'API key for authentication',
+            },
           },
         },
         response: {
           200: {
+            description: 'Successfully generated token',
             type: 'object',
             properties: {
-              token: { type: 'string' },
+              token: {
+                type: 'string',
+                description: 'JWT token for subsequent requests',
+              },
+            },
+          },
+          401: {
+            description: 'Invalid API key',
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
             },
           },
         },
@@ -42,13 +58,33 @@ export default async function authRoutes(fastify: FastifyInstance) {
   fastify.post(
     '/auth/validate',
     {
-      onRequest: [(request, reply) => fastify.authenticate(request, reply)],
       schema: {
+        description: 'Validate an existing token',
+        tags: ['Authentication'],
+        headers: {
+          type: 'object',
+          required: ['authorization'],
+          properties: {
+            authorization: {
+              type: 'string',
+              description: 'Bearer token',
+            },
+          },
+        },
         response: {
           200: {
+            description: 'Token is valid',
             type: 'object',
             properties: {
               valid: { type: 'boolean' },
+            },
+          },
+          401: {
+            description: 'Invalid or expired token',
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+              message: { type: 'string' },
             },
           },
         },

@@ -9,13 +9,41 @@ interface CreateUserBody extends Omit<User, 'createdAt'> {}
 const userRoutes: FastifyPluginAsync = fp(async (fastify) => {
   const userService = new UserService();
 
+  // Common security schema for all routes
+  const securitySchema = {
+    headers: {
+      type: 'object',
+      required: ['authorization'],
+      properties: {
+        authorization: {
+          type: 'string',
+          description: 'Bearer token',
+        },
+      },
+    },
+  };
+
   fastify.post<{ Body: CreateUserBody }>(
     '/users',
     {
       schema: {
+        description: 'Create a new user',
+        tags: ['Users'],
+        ...securitySchema,
         body: userSchema,
         response: {
-          201: userResponseSchema,
+          201: {
+            description: 'User created successfully',
+            ...userResponseSchema,
+          },
+          401: {
+            description: 'Unauthorized access',
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+              message: { type: 'string' },
+            },
+          },
         },
       },
       onRequest: [(request, reply) => fastify.authenticate(request, reply)],
@@ -30,10 +58,22 @@ const userRoutes: FastifyPluginAsync = fp(async (fastify) => {
     '/users',
     {
       schema: {
+        description: 'Get all users',
+        tags: ['Users'],
+        ...securitySchema,
         response: {
           200: {
+            description: 'List of users',
             type: 'array',
             items: userResponseSchema,
+          },
+          401: {
+            description: 'Unauthorized access',
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+              message: { type: 'string' },
+            },
           },
         },
       },
@@ -45,26 +85,56 @@ const userRoutes: FastifyPluginAsync = fp(async (fastify) => {
     }
   );
 
-  fastify.delete<{ Params: { id: string } }>('/users/:id', {
-    schema: {
-      params: {
-        type: 'object',
-        properties: {
-          id: { type: 'string' },
+  fastify.delete<{ Params: { id: string } }>(
+    '/users/:id',
+    {
+      schema: {
+        description: 'Delete a user by ID',
+        tags: ['Users'],
+        ...securitySchema,
+        params: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              description: 'User ID to delete',
+            },
+          },
+          required: ['id'],
         },
-        required: ['id'],
+        response: {
+          204: {
+            description: 'User deleted successfully',
+            type: 'null',
+          },
+          401: {
+            description: 'Unauthorized access',
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+              message: { type: 'string' },
+            },
+          },
+          404: {
+            description: 'User not found',
+            type: 'object',
+            properties: {
+              message: { type: 'string' },
+            },
+          },
+        },
       },
+      onRequest: [(request, reply) => fastify.authenticate(request, reply)],
     },
-    onRequest: [(request, reply) => fastify.authenticate(request, reply)],
-    handler: async (request, reply) => {
+    async (request, reply) => {
       const success = await userService.deleteUser(request.params.id);
       if (!success) {
         reply.code(404).send({ message: 'User not found' });
         return;
       }
       reply.code(204).send();
-    },
-  });
+    }
+  );
 });
 
 export default userRoutes;
