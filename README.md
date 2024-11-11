@@ -8,7 +8,7 @@ A robust microservice built with Fastify and TypeScript for managing user authen
 - JWT-based authorization
 - RESTful API endpoints
 - Swagger documentation
-- MongoDB integration with Typegoose
+- Redis for caching and session management
 - Load balancing with Nginx
 - Docker containerization
 - Clean architecture with repository pattern
@@ -18,26 +18,26 @@ A robust microservice built with Fastify and TypeScript for managing user authen
 - **Runtime**: Node.js (>=20.0.0)
 - **Framework**: Fastify
 - **Language**: TypeScript
-- **Database**: MongoDB with Mongoose & Typegoose
+- **Cache**: Redis
 - **Authentication**: JWT (@fastify/jwt)
 - **Documentation**: Swagger/OpenAPI
 - **Testing**: Jest
 - **Container**: Docker & Docker Compose
 - **Load Balancer**: Nginx
-- **Code Quality**: ESLint, Prettier, Husky
+- **Code Quality**: ESLint, Prettier
 
 ## 🏗 Project Structure
 
 ```
 src/
-├── models/ # Database models using Typegoose
+├── config/     # Configuration files (Redis, etc.)
 ├── repositories/ # Data access layer with generic repository pattern
-├── services/ # Business logic layer
-├── routes/ # API endpoints and request handlers
-├── plugins/ # Fastify plugins (auth, cors, etc.)
-├── schemas/ # Request/Response validation schemas
-├── types/ # TypeScript type definitions
-└── index.ts # Application entry point
+├── services/   # Business logic layer
+├── routes/     # API endpoints and request handlers
+├── plugins/    # Fastify plugins (auth, cors, etc.)
+├── schemas/    # Request/Response validation schemas
+├── types/      # TypeScript type definitions
+└── index.ts    # Application entry point
 ```
 
 ## 🚀 Getting Started
@@ -45,7 +45,7 @@ src/
 ### Prerequisites
 
 - Node.js >= 20.0.0
-- MongoDB
+- Redis
 - Docker & Docker Compose (for containerized deployment)
 
 ### Local Development
@@ -68,8 +68,9 @@ src/
    - Docker already has the variables
 
    ```bash
-   MONGODB_URI=mongodb://localhost:27017/user-management
+   REDIS_URL=redis://localhost:6379
    JWT_SECRET=your-secret-key
+   API_KEY=your-api-key
    ```
 
 4. Start development server:
@@ -88,8 +89,8 @@ docker-compose up -d
 
 This will start:
 
-- 2 API instances
-- MongoDB instance
+- 2 API instances for high availability
+- Redis instance for caching
 - Nginx load balancer
 
 ## 📚 API Documentation
@@ -128,9 +129,9 @@ The service is containerized with:
 
 - Multi-container setup using Docker Compose
 - Load balancing across multiple API instances
-- Persistent MongoDB volume
-- Nginx reverse proxy
-- Environment variable management
+- Persistent Redis volume
+- Nginx reverse proxy with health checks
+- Secure environment variable management
 
 ## 📝 License
 
