@@ -6,7 +6,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/ticktuk-user-management"
+    "url": "https://github.com/Danimaxpd/TickTuk-BackEnd"
   },
   "engines": {
     "node": ">=20.0.0"
