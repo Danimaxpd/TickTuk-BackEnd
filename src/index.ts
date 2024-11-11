@@ -5,7 +5,7 @@ import swaggerUi from '@fastify/swagger-ui';
 import jwt from '@fastify/jwt';
 import authPlugin from './plugins/auth';
 import userRoutes from './routes/users';
-import mongoose from 'mongoose';
+import { redis } from './config/redis';
 import authRoutes from './routes/auth';
 
 const fastify = Fastify({
@@ -28,12 +28,22 @@ const swaggerOptions = {
 
 const start = async (): Promise<void> => {
   try {
-    if (!process.env.MONGODB_URI) {
-      throw new Error('MONGODB_URI is not defined');
+    if (!process.env.REDIS_URL) {
+      throw new Error('REDIS_URL is not defined');
     }
-    // Connect to MongoDB
-    await mongoose.connect(process.env.MONGODB_URI);
-    fastify.log.info('MongoDB connected successfully');
+    // Connect to Redis and verify connection
+    try {
+      await redis.set('health-check', 'ping');
+      const response = await redis.get('health-check');
+      if (response !== 'ping') {
+        throw new Error('Redis connection failed');
+      }
+      await redis.del('health-check');
+      fastify.log.info('Redis connected successfully');
+    } catch (error) {
+      fastify.log.error('Redis connection failed:', error);
+      throw error;
+    }
 
     // Register plugins
     await fastify.register(cors);
@@ -71,7 +81,7 @@ const start = async (): Promise<void> => {
 const gracefulShutdown = async (): Promise<void> => {
   try {
     await fastify.close();
-    await mongoose.connection.close();
+    await redis.quit();
     process.exit(0);
   } catch (err) {
     fastify.log.error(err);

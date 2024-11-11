@@ -1,27 +1,37 @@
-version: '3.8'
-
 services:
   api1:
     build: .
     environment:
-      - MONGODB_URI=${MONGODB_URI}
+      - REDIS_URL=redis://default:RedisPassw0rd@redis:6379
       - JWT_SECRET=${JWT_SECRET}
       - API_KEY=${API_KEY}
     depends_on:
-      - mongodb
+      redis:
+        condition: service_healthy
     networks:
       - app-network
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', 'http://localhost:3000/health']
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   api2:
     build: .
     environment:
-      - MONGODB_URI=${MONGODB_URI}
+      - REDIS_URL=redis://default:RedisPassw0rd@redis:6379
       - JWT_SECRET=${JWT_SECRET}
       - API_KEY=${API_KEY}
     depends_on:
-      - mongodb
+      redis:
+        condition: service_healthy
     networks:
       - app-network
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', 'http://localhost:3000/health']
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   nginx:
     image: nginx:latest
@@ -34,19 +44,47 @@ services:
       - api2
     networks:
       - app-network
+    healthcheck:
+      test: ['CMD', 'nginx', '-t']
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
 
-  mongodb:
-    image: mongo:latest
+  redis:
+    image: redis:alpine
     ports:
-      - '27017:27017'
+      - '6379:6379'
     volumes:
-      - mongodb_data:/data/db
+      - redis_data:/data
+    command: >
+      redis-server 
+      --appendonly yes 
+      --maxmemory 512mb 
+      --maxmemory-policy allkeys-lru
+      --requirepass RedisPassw0rd
+      --protected-mode yes
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-a', 'RedisPassw0rd', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5
     networks:
       - app-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+    restart: unless-stopped
 
 volumes:
-  mongodb_data:
+  redis_data:
+    driver: local
 
 networks:
   app-network:
     driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16
