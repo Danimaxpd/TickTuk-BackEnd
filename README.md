@@ -1,6 +1,6 @@
 # TickTuk User Management Service
 
-A robust microservice built with Fastify and TypeScript for managing user authentication, authorization, and profile management in the TickTuk application.
+A robust service built with Fastify and TypeScript for managing user authentication, authorization, and profile management in the TickTuk application.
 
 ## 🚀 Features
 
@@ -8,7 +8,7 @@ A robust microservice built with Fastify and TypeScript for managing user authen
 - JWT-based authorization
 - RESTful API endpoints
 - Swagger documentation
-- Redis for caching and session management
+- Redis for state synchronization
 - Load balancing with Nginx
 - Docker containerization
 - Clean architecture with repository pattern
@@ -18,10 +18,9 @@ A robust microservice built with Fastify and TypeScript for managing user authen
 - **Runtime**: Node.js (>=20.0.0)
 - **Framework**: Fastify
 - **Language**: TypeScript
-- **Cache**: Redis
+- **State Store**: Redis
 - **Authentication**: JWT (@fastify/jwt)
 - **Documentation**: Swagger/OpenAPI
-- **Testing**: Jest
 - **Container**: Docker & Docker Compose
 - **Load Balancer**: Nginx
 - **Code Quality**: ESLint, Prettier
@@ -53,7 +52,7 @@ src/
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/ticktuk-user-management.git
+   git clone https://github.com/Danimaxpd/TickTuk-BackEnd
    cd ticktuk-user-management
    ```
 
@@ -90,7 +89,7 @@ docker-compose up -d
 This will start:
 
 - 2 API instances for high availability
-- Redis instance for caching
+- Redis instance for state synchronization
 - Nginx load balancer
 
 ## 📚 API Documentation
@@ -127,11 +126,13 @@ http://localhost/documentation
 
 The service is containerized with:
 
-- Multi-container setup using Docker Compose
-- Load balancing across multiple API instances
-- Persistent Redis volume
-- Nginx reverse proxy with health checks
-- Secure environment variable management
+- Multi-container setup using Docker Compose:
+  - 2 API instances for high availability
+  - Redis for in-memory state synchronization
+  - Nginx load balancer with round-robin distribution
+- Isolated network with internal service discovery
+- Health monitoring for all services
+- Automatic container restart on failure
 
 ## 📝 License
 
