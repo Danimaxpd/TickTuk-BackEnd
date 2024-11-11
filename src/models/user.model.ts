@@ -1,6 +1,20 @@
 import { modelOptions, prop, getModelForClass } from '@typegoose/typegoose';
 
-@modelOptions({ schemaOptions: { timestamps: true } })
+@modelOptions({
+  schemaOptions: {
+    timestamps: true,
+    toJSON: {
+      virtuals: true,
+      transform: (_doc, ret) => {
+        // Convert _id to id
+        ret.id = ret._id.toString();
+        delete ret._id;
+        delete ret.__v;
+        return ret;
+      },
+    },
+  },
+})
 export class User {
   @prop({ required: true, type: String })
   public firstName!: string;
