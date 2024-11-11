@@ -2,9 +2,11 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
+import jwt from '@fastify/jwt';
 import authPlugin from './plugins/auth';
 import userRoutes from './routes/users';
 import mongoose from 'mongoose';
+import authRoutes from './routes/auth';
 
 const fastify = Fastify({
   logger: true,
@@ -26,10 +28,11 @@ const swaggerOptions = {
 
 const start = async (): Promise<void> => {
   try {
+    if (!process.env.MONGODB_URI) {
+      throw new Error('MONGODB_URI is not defined');
+    }
     // Connect to MongoDB
-    await mongoose.connect(
-      process.env.MONGODB_URI || 'mongodb://localhost:27017/user-management'
-    );
+    await mongoose.connect(process.env.MONGODB_URI);
     fastify.log.info('MongoDB connected successfully');
 
     // Register plugins
@@ -42,7 +45,17 @@ const start = async (): Promise<void> => {
         deepLinking: false,
       },
     });
+
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET is not defined');
+    }
+
+    await fastify.register(jwt, {
+      secret: process.env.JWT_SECRET,
+    });
+
     await fastify.register(authPlugin);
+    await fastify.register(authRoutes);
     await fastify.register(userRoutes);
 
     // Start server

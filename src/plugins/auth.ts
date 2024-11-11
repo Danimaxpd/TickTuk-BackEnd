@@ -1,24 +1,62 @@
+import fp from 'fastify-plugin';
 import { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
-import fastifyJwt from '@fastify/jwt';
 
 declare module 'fastify' {
   interface FastifyInstance {
-    authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
+    authenticate: (
+      request: FastifyRequest,
+      reply: FastifyReply
+    ) => Promise<void>;
+    generateFrontendToken: () => string;
   }
 }
 
 const authPlugin: FastifyPluginAsync = async (fastify) => {
-  await fastify.register(fastifyJwt, {
-    secret: process.env.JWT_SECRET || 'your-secret-key'
-  });
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not defined');
+  }
 
-  fastify.decorate('authenticate', async (request: FastifyRequest, reply: FastifyReply) => {
+  const authenticate = async (request: FastifyRequest, reply: FastifyReply) => {
     try {
-      await request.jwtVerify();
+      const authHeader = request.headers.authorization;
+      if (!authHeader) {
+        throw new Error('Missing authorization header');
+      }
+
+      const [bearer, token] = authHeader.split(' ');
+      if (bearer !== 'Bearer' || !token) {
+        throw new Error('Invalid authorization format');
+      }
+
+      fastify.jwt.verify(token);
+
+      const decoded = fastify.jwt.decode(token);
+      if (
+        decoded &&
+        typeof decoded === 'object' &&
+        'type' in decoded &&
+        decoded.type !== 'frontend'
+      ) {
+        throw new Error('Invalid token type');
+      }
     } catch (err) {
-      reply.code(401).send({ error: 'Unauthorized' });
+      reply.code(401).send({
+        error: 'Unauthorized',
+        message: err instanceof Error ? err.message : 'Authentication failed',
+      });
     }
+  };
+
+  fastify.decorate('authenticate', authenticate);
+  fastify.decorate('generateFrontendToken', () => {
+    return fastify.jwt.sign({
+      type: 'frontend',
+      timestamp: Date.now(),
+      expiresIn: Math.floor(Date.now() / 1000) + 3600, // 1 hour
+    });
   });
 };
 
-export default authPlugin; 
+export default fp(authPlugin, {
+  name: 'auth-plugin',
+});

@@ -9,47 +9,53 @@ interface CreateUserBody extends Omit<User, 'createdAt'> {}
 const userRoutes: FastifyPluginAsync = fp(async (fastify) => {
   const userService = new UserService();
 
-  fastify.post<{ Body: CreateUserBody }>('/users', {
-    schema: {
-      body: userSchema,
-      response: {
-        201: userResponseSchema
-      }
+  fastify.post<{ Body: CreateUserBody }>(
+    '/users',
+    {
+      schema: {
+        body: userSchema,
+        response: {
+          201: userResponseSchema,
+        },
+      },
+      onRequest: [(request, reply) => fastify.authenticate(request, reply)],
     },
-    preHandler: fastify.authenticate ? [fastify.authenticate] : undefined,
-    handler: async (request, reply) => {
+    async (request, reply) => {
       const user = await userService.createUser(request.body);
       reply.code(201).send(user);
     }
-  });
+  );
 
-  fastify.get('/users', {
-    schema: {
-      response: {
-        200: {
-          type: 'array',
-          items: userResponseSchema
-        }
-      }
+  fastify.get(
+    '/users',
+    {
+      schema: {
+        response: {
+          200: {
+            type: 'array',
+            items: userResponseSchema,
+          },
+        },
+      },
+      onRequest: [(request, reply) => fastify.authenticate(request, reply)],
     },
-    preHandler: fastify.authenticate ? [fastify.authenticate] : undefined,
-    handler: async (_request, reply) => {
+    async (_request, reply) => {
       const users = await userService.getAllUsers();
       reply.send(users);
     }
-  });
+  );
 
   fastify.delete<{ Params: { id: string } }>('/users/:id', {
     schema: {
       params: {
         type: 'object',
         properties: {
-          id: { type: 'string' }
+          id: { type: 'string' },
         },
-        required: ['id']
-      }
+        required: ['id'],
+      },
     },
-    preHandler: fastify.authenticate ? [fastify.authenticate] : undefined,
+    onRequest: [(request, reply) => fastify.authenticate(request, reply)],
     handler: async (request, reply) => {
       const success = await userService.deleteUser(request.params.id);
       if (!success) {
@@ -57,8 +63,8 @@ const userRoutes: FastifyPluginAsync = fp(async (fastify) => {
         return;
       }
       reply.code(204).send();
-    }
+    },
   });
 });
 
-export default userRoutes; 
+export default userRoutes;
