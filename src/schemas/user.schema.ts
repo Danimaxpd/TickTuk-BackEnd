@@ -4,6 +4,8 @@ export const userSchema = {
   properties: {
     firstName: { type: 'string' },
     lastName: { type: 'string' },
+    gender: { type: 'string' },
+    description: { type: 'string' },
     email: { type: 'string', format: 'email' },
     password: { type: 'string', minLength: 6 },
   },
@@ -18,6 +20,8 @@ export const userResponseSchema = {
     },
     firstName: { type: 'string' },
     lastName: { type: 'string' },
+    gender: { type: 'string' },
+    description: { type: 'string' },
     email: { type: 'string' },
     createdAt: { type: 'string', format: 'date-time' },
   },
